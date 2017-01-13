@@ -2,7 +2,13 @@ var restify = require('restify');
 var pg = require('pg');
 var util = require('util');
 var optimist = require('optimist').argv;
+var AWS = require("aws-sdk");
+AWS.config.loadFromPath('./.aws/credentials.json'); 
 
+AWS.config.update({
+  region: "us-west-2",
+//   endpoint: "http://localhost:8080"
+});
 
 var Init = function(username, password, db) {
     var connection = util.format("postgres://%s:%s@localhost/%s", username, password, db);
@@ -48,7 +54,7 @@ var Init = function(username, password, db) {
                   console.log(err);
                   return res.status(500).json({success: false, data: err})
                 }
-                geometry = result.rows[0].geometry;
+//                 geometry = result.rows[0].geometry;
             });
 
             // After all data is returned, close connection and return results
