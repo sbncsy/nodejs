@@ -44,7 +44,7 @@ var Init = function(username, password, db) {
                 }
             });
                
-            query.on('row', (row) => {
+            query.on('row', function(row) {
                 steps.push({"geometry":row.the_geom,"maneuver":{"location":[Number(row.lat), Number(row.lon)]}});
 
             });
@@ -58,7 +58,7 @@ var Init = function(username, password, db) {
             });
 
             // After all data is returned, close connection and return results
-            query_2.on('end', () => {
+            query_2.on('end', function() {
               done();
               return res.json({"routes":[{geometry,"legs":[{"steps":steps}]}]});
             });
