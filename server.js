@@ -2,13 +2,13 @@ var restify = require('restify');
 var pg = require('pg');
 var util = require('util');
 var optimist = require('optimist').argv;
-var AWS = require("aws-sdk");
-AWS.config.loadFromPath('./.aws/credentials.json'); 
+// var AWS = require("aws-sdk");
+// AWS.config.loadFromPath('./.aws/credentials.json'); 
 
-AWS.config.update({
-  region: "us-west-2",
+// AWS.config.update({
+//   region: "us-west-2",
 //   endpoint: "http://localhost:8080"
-});
+// });
 
 var Init = function(username, password, db) {
     var connection = util.format("postgres://%s:%s@localhost/%s", username, password, db);
