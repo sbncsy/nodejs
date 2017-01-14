@@ -15,11 +15,7 @@ var Init = function(username, password, db) {
     server.use(restify.bodyParser());
  
     server.post('/route', function(req, res, next) {
-        // console.log(req.params.query, connection);
         const steps = [];
-        // const geometry = "";
-        // const lat = [];
-        // const lon = [];
         pg.connect(connection, function(err, client, done) {
             if(err) {
               done();
@@ -28,8 +24,6 @@ var Init = function(username, password, db) {
             }
             const sql = "SELECT lat, lon, ST_AsGeoJSON(the_geom) as the_geom FROM pgr_dijkstra( 'SELECT gid as id, source, target, cost, reverse_cost FROM ways', " + req.params.source_id + ", " + req.params.dest_id + ", FALSE ), ways_vertices_pgr WHERE node = id order by path_seq;";
             const sql_2 = "SELECT ST_AsGeoJSON(ST_LineMerge(ST_Collect(the_geom))) as geometry FROM pgr_dijkstra( 'SELECT gid as id, source, target, cost, reverse_cost FROM ways', " + req.params.source_id + ", " + req.params.dest_id + ", FALSE ), ways where edge = gid;";
-            // const sql_2 = "SELECT ST_AsGeoJSON(ST_Collect(the_geom)) as geometry FROM pgr_dijkstra( 'SELECT gid as id, source, target, cost, reverse_cost FROM ways', " + req.params.source_id + ", " + req.params.dest_id + ", FALSE ), ways_vertices_pgr WHERE node = id;";
-            // const sql_3 = "select ST_AsGeoJSON(ST_Collect(the_geom)) as geometryfrom('SELECT the_geom FROM pgr_dijkstra( 'SELECT gid as id, source, target, cost, reverse_cost FROM ways', " + req.params.source_id + ", " + req.params.dest_id + ", FALSE ), ways_vertices_pgr WHERE node = id order by path_seq;)'";
             const query = client.query(sql, function(err, result) {
                 if(err) {
                   done();
@@ -39,7 +33,7 @@ var Init = function(username, password, db) {
             });
                 
             query.on('row', function(row) {
-                steps.push({"geometry":row.the_geom,"maneuver":{"location":[Number(row.lat), Number(row.lon)]}});
+                steps.push({"geometry":JSON.parse(row.the_geom),"maneuver":{"location":[Number(row.lat), Number(row.lon)]}});
  
             });
             const query_2 = client.query(sql_2, function(err, result) {
@@ -48,19 +42,18 @@ var Init = function(username, password, db) {
                   console.log(err);
                   return res.status(500).json({success: false, data: err})
                 }
-                geometry = result.rows[0].geometry;
+                geometry = JSON.parse(result.rows[0].geometry);
             });
  
             // After all data is returned, close connection and return results
             query_2.on('end', function() {
               done();
-              const val = {"routes":[{geometry,"legs":[{"steps":steps}]}]};
-              return res.json(val);
+              return res.json({"routes":[{geometry:geometry,"legs":[{"steps":steps}]}]});
             });
         });
     });
  
-        // Return full result from query
+    // Return full result from query
     server.post('/nearnode', function(req, res, next) {
         console.log(req.params.query, connection);
         pg.connect(connection, function(err, client, done) {
