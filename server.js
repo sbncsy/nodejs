@@ -60,7 +60,7 @@ var Init = function(username, password, db) {
             // After all data is returned, close connection and return results
             query_2.on('end', function() {
               done();
-              return res.json({"routes":[{geometry,"legs":[{"steps":steps}]}]});
+              return res.send({"routes":[{geometry,"legs":[{"steps":steps}]}]});
             });
         });
     });
