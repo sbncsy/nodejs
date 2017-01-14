@@ -14,26 +14,6 @@ var Init = function(username, password, db) {
     server.use(restify.queryParser());
     server.use(restify.bodyParser());
  
-    // Return full result from query
-    server.post('/query', function(req, res, next) {
-        console.log(req.params.query, connection);
-        pg.connect(connection, function(err, client, done) {
-            if (err) {
-                res.send({result:"null", type: "connection", error: err});
-            }
- 
-            client.query(req.params.query, function(err, result) {
-                done();
-                if(err) {
-                    res.send({result:"null", type: "query", error:err});
-                }
- 
-                res.send({id: result.rows[0].id, lat: result.rows[0].lat, lon: result.rows[0].lon, distance: result.rows[0].distance});
-            });
-        });
-        return next();
-    });
- 
     server.post('/route', function(req, res, next) {
         // console.log(req.params.query, connection);
         const steps = [];
@@ -58,7 +38,7 @@ var Init = function(username, password, db) {
                 }
             });
                 
-            query.on('row', (row) => {
+            query.on('row', function(row) {
                 steps.push({"geometry":row.the_geom,"maneuver":{"location":[Number(row.lat), Number(row.lon)]}});
  
             });
@@ -72,45 +52,14 @@ var Init = function(username, password, db) {
             });
  
             // After all data is returned, close connection and return results
-            query_2.on('end', () => {
+            query_2.on('end', function() {
               done();
-              return res.json({"routes":[{geometry,"legs":[{"steps":steps}]}]});
+              const val = {"routes":[{geometry,"legs":[{"steps":steps}]}]};
+              return res.json(val);
             });
         });
     });
  
- 
-    server.post('/route2', function(req, res, next) {
-        console.log(req.params.query, connection);
-        const steps = [];
-        // const lat = [];
-        // const lon = [];
-        pg.connect(connection, function(err, client, done) {
-            if(err) {
-              done();
-              console.log(err);
-              return res.status(500).json({success: false, data: err})
-            }
-                 
-            const query = client.query(req.params.nquery, function(err, result) {
-                if(err) {
-                  done();
-                  console.log(err);
-                  return res.status(500).json({success: false, data: err})
-                }
-            });
-                
-            query.on('row', (row) => {
-                steps.push({"geometry":row.the_geom,"maneuver":{"location":[Number(row.lat), Number(row.lon)]}});
- 
-            });
-            // After all data is returned, close connection and return results
-            query.on('end', () => {
-              done();
-              return res.json({"routes":[{"legs":[{"steps":steps}]}]});
-            });
-        });
-    });
         // Return full result from query
     server.post('/nearnode', function(req, res, next) {
         console.log(req.params.query, connection);
@@ -130,25 +79,7 @@ var Init = function(username, password, db) {
         });
         return next();
     });
- 
-    server.post('/nearnode2', function(req, res, next) {
-        console.log(req.params.query, connection);
-        pg.connect(connection, function(err, client, done) {
-            if (err) {
-                res.send({result:"null", type: "connection", error: err});
-            }
- 
-            client.query(req.params.query, function(err, result) {
-                done();
-                if(err) {
-                    res.send({result:"null", type: "query", error:err});
-                }
- 
-                res.send({id: result.rows[0].id, lat: result.rows[0].lat, lon: result.rows[0].lon, distance: result.rows[0].distance});
-            });
-        });
-        return next();
-    });
+
     server.listen(8080, function() {
         console.log('%s listening at %s', server.name, server.url);
     });
